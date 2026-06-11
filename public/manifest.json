@@ -1,0 +1,16 @@
+{
+  "short_name": "MomentKeeper",
+  "name": "MomentKeeper",
+  "icons": [
+    {
+      "src": "/app-icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0A0A0A",
+  "theme_color": "#1F1F1F",
+  "display": "standalone",
+  "orientation": "portrait"
+}

@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient (Dark Grey/Black Luxury) -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1F1F1F" />
+      <stop offset="100%" stop-color="#0A0A0A" />
+    </linearGradient>
+
+    <!-- Dark luxury box background gradient -->
+    <linearGradient id="boxGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2E2E2E" />
+      <stop offset="50%" stop-color="#1E1E1E" />
+      <stop offset="100%" stop-color="#0F0F0F" />
+    </linearGradient>
+
+    <!-- Metallic silver ribbon gradient -->
+    <linearGradient id="ribbonGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="40%" stop-color="#D1D5DB" />
+      <stop offset="70%" stop-color="#9CA3AF" />
+      <stop offset="100%" stop-color="#4B5563" />
+    </linearGradient>
+
+    <!-- Embossed medallion background -->
+    <radialGradient id="medallionGradient" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+      <stop offset="0%" stop-color="#374151" />
+      <stop offset="70%" stop-color="#1F2937" />
+      <stop offset="100%" stop-color="#111827" />
+    </radialGradient>
+  </defs>
+
+  <!-- Outer Rounded Rectangle Background (standard launcher look) -->
+  <rect width="512" height="512" rx="128" fill="url(#bgGradient)" stroke="rgba(255,255,255,0.06)" stroke-width="4" />
+
+  <g transform="scale(4.0) translate(14, 14)">
+    <!-- Left Bow Loop -->
+    <path d="M 50 26 C 28 8 22 25 47 27 Z" fill="url(#ribbonGradient)" />
+
+    <!-- Right Bow Loop -->
+    <path d="M 50 26 C 72 8 78 25 53 27 Z" fill="url(#ribbonGradient)" />
+
+    <!-- Bow Tails -->
+    <path d="M 46 26 C 36 34 32 45 30 52 C 34 48 42 38 46 28 Z" fill="url(#ribbonGradient)" opacity="0.8" />
+    <path d="M 54 26 C 64 34 68 45 70 52 C 66 48 58 38 54 28 Z" fill="url(#ribbonGradient)" opacity="0.8" />
+
+    <!-- Main Box Body -->
+    <rect x="18" y="36" width="64" height="52" rx="8" fill="url(#boxGradient)" stroke="rgba(255,255,255,0.06)" stroke-width="1.2" />
+
+    <!-- Box Lid -->
+    <rect x="14" y="27" width="72" height="11" rx="3" fill="url(#boxGradient)" stroke="rgba(255,255,255,0.1)" stroke-width="1.2" />
+
+    <!-- Vertical Ribbon -->
+    <rect x="44" y="27" width="12" height="61" fill="url(#ribbonGradient)" />
+
+    <!-- Horizontal Ribbon -->
+    <rect x="18" y="56" width="64" height="11" fill="url(#ribbonGradient)" />
+
+    <!-- Bow Knot -->
+    <circle cx="50" cy="26" r="6" fill="url(#ribbonGradient)" />
+    <circle cx="50" cy="26" r="4.5" fill="#FFFFFF" opacity="0.2" />
+
+    <!-- Central Medallion -->
+    <circle cx="50" cy="62" r="17" fill="url(#medallionGradient)" stroke="url(#ribbonGradient)" stroke-width="1.5" />
+    <circle cx="50" cy="62" r="14.5" fill="none" stroke="rgba(255, 255, 255, 0.05)" stroke-width="1" />
+
+    <!-- Embossed Letter 'M' -->
+    <text x="50" y="68" text-anchor="middle" font-family="'Inter', system-ui, sans-serif" font-weight="900" font-size="17" fill="url(#ribbonGradient)" letter-spacing="0">
+      M
+    </text>
+  </g>
+</svg>

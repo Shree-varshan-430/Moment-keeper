@@ -1,0 +1,102 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Schema Validation Helpers
+    function isValidString(val, minLen, maxLen) {
+      return val is string && val.size() >= minLen && val.size() <= maxLen;
+    }
+
+    function isValidDatePattern(dateStr) {
+      // Validates YYYY-MM-DD format using a regex-like pattern
+      return dateStr is string && dateStr.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    // Users Collection rules
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Events Collection rules
+    match /events/{eventId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      allow create: if isAuthenticated() 
+        && request.resource.data.userId == request.auth.uid
+        && isValidString(request.resource.data.title, 1, 100)
+        && isValidDatePattern(request.resource.data.date)
+        && request.resource.data.category in ['birthday', 'anniversary', 'wedding', 'family', 'personal', 'holiday', 'business', 'custom']
+        && request.resource.data.priority in ['low', 'medium', 'high', 'critical']
+        && request.resource.data.isFavorite is bool
+        && request.resource.data.isArchived is bool
+        && request.resource.data.tags is list
+        && (!('description' in request.resource.data) || request.resource.data.description is string)
+        && (!('notes' in request.resource.data) || request.resource.data.notes is string)
+        && (!('spotifyUrl' in request.resource.data) || request.resource.data.spotifyUrl is string);
+
+      allow update: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid
+        && isValidString(request.resource.data.title, 1, 100)
+        && isValidDatePattern(request.resource.data.date)
+        && request.resource.data.category in ['birthday', 'anniversary', 'wedding', 'family', 'personal', 'holiday', 'business', 'custom']
+        && request.resource.data.priority in ['low', 'medium', 'high', 'critical']
+        && request.resource.data.isFavorite is bool
+        && request.resource.data.isArchived is bool
+        && request.resource.data.tags is list
+        && (!('description' in request.resource.data) || request.resource.data.description is string)
+        && (!('notes' in request.resource.data) || request.resource.data.notes is string)
+        && (!('spotifyUrl' in request.resource.data) || request.resource.data.spotifyUrl is string);
+
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Persons Collection rules
+    match /persons/{personId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && isValidString(request.resource.data.name, 1, 100)
+        && request.resource.data.isFavorite is bool
+        && request.resource.data.tags is list
+        && request.resource.data.giftIdeas is list
+        && request.resource.data.previousGifts is list
+        && (!('nickname' in request.resource.data) || request.resource.data.nickname is string)
+        && (!('gender' in request.resource.data) || request.resource.data.gender is string)
+        && (!('photoUrl' in request.resource.data) || request.resource.data.photoUrl is string)
+        && (!('relationship' in request.resource.data) || request.resource.data.relationship is string)
+        && (!('notes' in request.resource.data) || request.resource.data.notes is string);
+
+      allow update: if isAuthenticated()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid
+        && isValidString(request.resource.data.name, 1, 100)
+        && request.resource.data.isFavorite is bool
+        && request.resource.data.tags is list
+        && request.resource.data.giftIdeas is list
+        && request.resource.data.previousGifts is list
+        && (!('nickname' in request.resource.data) || request.resource.data.nickname is string)
+        && (!('gender' in request.resource.data) || request.resource.data.gender is string)
+        && (!('photoUrl' in request.resource.data) || request.resource.data.photoUrl is string)
+        && (!('relationship' in request.resource.data) || request.resource.data.relationship is string)
+        && (!('notes' in request.resource.data) || request.resource.data.notes is string);
+
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Groups Collection rules
+    match /groups/{groupId} {
+      allow read, write: if isAuthenticated() && (request.auth.uid in resource.data.memberIds || request.auth.uid == request.resource.data.ownerId);
+    }
+  }
+}
