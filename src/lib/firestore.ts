@@ -196,28 +196,76 @@ export const getUserProfiles = async (uids: string[]): Promise<UserProfile[]> =>
 
 export const subscribeToGroups = (
   userId: string,
+  email: string | null | undefined,
   callback: (groups: Group[]) => void
 ) => {
-  const q = query(
+  const q1 = query(
     collection(db, COLLECTIONS.groups),
     where('memberIds', 'array-contains', userId)
   );
-  return onSnapshot(q, snap => {
-    const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Group));
-    list.sort((a, b) => a.name.localeCompare(b.name));
-    callback(list);
+
+  if (!email) {
+    return onSnapshot(q1, snap => {
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Group));
+      list.sort((a, b) => a.name.localeCompare(b.name));
+      callback(list);
+    });
+  }
+
+  const q2 = query(
+    collection(db, COLLECTIONS.groups),
+    where('memberIds', 'array-contains', email.toLowerCase().trim())
+  );
+
+  let list1: Group[] = [];
+  let list2: Group[] = [];
+
+  const updateCombined = () => {
+    const combined = [...list1];
+    list2.forEach(g => {
+      if (!combined.some(cg => cg.id === g.id)) {
+        combined.push(g);
+      }
+    });
+    combined.sort((a, b) => a.name.localeCompare(b.name));
+    callback(combined);
+  };
+
+  const unsub1 = onSnapshot(q1, snap => {
+    list1 = snap.docs.map(d => ({ id: d.id, ...d.data() } as Group));
+    updateCombined();
   });
+
+  const unsub2 = onSnapshot(q2, snap => {
+    list2 = snap.docs.map(d => ({ id: d.id, ...d.data() } as Group));
+    updateCombined();
+  });
+
+  return () => {
+    unsub1();
+    unsub2();
+  };
 };
 
 export const addMemberToGroupByEmail = async (groupId: string, email: string): Promise<string> => {
+  const emailLower = email.toLowerCase().trim();
+  
   // 1. Find user profile by email
-  const q = query(collection(db, COLLECTIONS.users), where('email', '==', email.toLowerCase().trim()));
+  const q = query(collection(db, COLLECTIONS.users), where('email', '==', emailLower));
   const snap = await getDocs(q);
+  
+  let userId: string;
+  let displayName: string;
+  
   if (snap.empty) {
-    throw new Error(`User with email ${email} not found.`);
+    // If the user has not registered yet, we add their email directly as a placeholder member ID.
+    userId = emailLower;
+    displayName = emailLower.split('@')[0];
+  } else {
+    const userDoc = snap.docs[0];
+    userId = userDoc.id;
+    displayName = userDoc.data().displayName || emailLower;
   }
-  const userDoc = snap.docs[0];
-  const userId = userDoc.id;
 
   // 2. Add to group memberIds
   const groupRef = doc(db, COLLECTIONS.groups, groupId);
@@ -226,8 +274,8 @@ export const addMemberToGroupByEmail = async (groupId: string, email: string): P
     throw new Error('Group not found.');
   }
   const groupData = groupSnap.data() as Group;
-  if (groupData.memberIds.includes(userId)) {
-    throw new Error('User is already a member of this group.');
+  if (groupData.memberIds.includes(userId) || groupData.memberIds.includes(emailLower)) {
+    throw new Error('User is already invited or a member of this group.');
   }
 
   const updatedMembers = [...groupData.memberIds, userId];
@@ -235,7 +283,7 @@ export const addMemberToGroupByEmail = async (groupId: string, email: string): P
     memberIds: updatedMembers
   });
 
-  return userDoc.data().displayName || email;
+  return displayName;
 };
 
 export const leaveGroup = async (groupId: string, userId: string) => {

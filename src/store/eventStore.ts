@@ -90,9 +90,32 @@ export const useEventStore = create<EventState>((set, get) => ({
     try {
       let unsubscribeEvents: (() => void) | null = null;
 
+      const { useAuthStore } = await import('@/store/authStore');
+      const userEmail = useAuthStore.getState().user?.email || null;
+
       // 1. Subscribe to groups reactively
-      const unsubscribeGroups = subscribeToGroups(userId, async (groupsList) => {
+      const unsubscribeGroups = subscribeToGroups(userId, userEmail, async (groupsList) => {
         set({ groups: groupsList });
+
+        // Auto-upgrade any email-based invitations to UID-based membership
+        if (userEmail) {
+          const emailLower = userEmail.toLowerCase().trim();
+          for (const group of groupsList) {
+            if (group.memberIds.includes(emailLower)) {
+              const updatedMembers = group.memberIds.map(id => id === emailLower ? userId : id);
+              const { doc, updateDoc } = await import('firebase/firestore');
+              const { db } = await import('@/lib/firebase');
+              try {
+                await updateDoc(doc(db, 'groups', group.id), {
+                  memberIds: updatedMembers
+                });
+                console.log(`[Groups] Upgraded membership for ${emailLower} to ${userId} in group ${group.id}`);
+              } catch (e) {
+                console.warn('Failed to auto-upgrade group membership:', e);
+              }
+            }
+          }
+        }
 
         // Resolve user profiles for all group members in the background
         const uniqueMemberIds = Array.from(new Set(groupsList.flatMap(g => g.memberIds)));
