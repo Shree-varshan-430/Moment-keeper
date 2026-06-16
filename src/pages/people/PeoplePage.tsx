@@ -163,8 +163,6 @@ export const PeoplePage: React.FC = () => {
     let finalPhotoUrl = photoUrl;
 
     try {
-      let personId = editingPerson?.id;
-
       const payload: Omit<Person, 'id' | 'createdAt' | 'updatedAt'> = {
         userId: user.uid,
         name: name.trim(),
@@ -182,14 +180,21 @@ export const PeoplePage: React.FC = () => {
       };
 
       if (editingPerson) {
-        await editPerson(editingPerson.id, payload, selectedPhotoBlob);
+        editPerson(editingPerson.id, payload, selectedPhotoBlob).catch((err) => {
+          console.error('Failed to update profile:', err);
+          toast.error('Failed to update profile.');
+        });
       } else {
-        personId = await addPerson(payload, selectedPhotoBlob);
+        addPerson(payload, selectedPhotoBlob).catch((err) => {
+          console.error('Failed to create profile:', err);
+          toast.error('Failed to create profile.');
+        });
       }
 
       toast.success(editingPerson ? 'Profile updated successfully!' : 'Profile created successfully!');
       setModalOpen(false);
     } catch (err) {
+      console.error('Failed to save profile:', err);
       toast.error('Failed to save profile.');
     }
   };

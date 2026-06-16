@@ -182,31 +182,39 @@ export const ContactImportModal: React.FC<ContactImportModalProps> = ({ isOpen, 
         toast.error('Permission denied or picker cancelled.');
       }
     } else {
-      // Simulation mode for unsupported views
-      setTimeout(() => {
-        hapticService.success();
-        setPermissionState('granted');
-        
-        const mockRaw = [
-          { name: 'Sarah Connor', phone: '+1 555-9011', email: 'sarah.c@terminator.com', birthday: '1965-11-10' },
-          { name: 'Bruce Wayne', phone: '+1 735-3921', email: 'bruce@waynecorp.com', birthday: '1972-02-19' },
-          { name: persons[0]?.name || 'John Doe', phone: '+1 555-1234', email: 'john@example.com', birthday: '' },
-          { name: 'Diana Prince', phone: '+1 800-AMAZON', email: 'diana@themyscira.org', birthday: '' },
-          { name: 'Tony Stark', phone: '+1 3000-IRON', email: 'tony@stark.io', birthday: '1970-05-29' },
-          { name: 'Clark Kent', phone: '+1 555-DAILY', email: 'clark@dailyplanet.com', birthday: '' }
-        ];
-        
-        const processed = processContacts(mockRaw);
-        setContacts(processed);
+      // Simulation mode for unsupported views - ask permission first
+      const hasPermission = window.confirm("Allow MomentKeeper to access your device contacts?");
+      if (hasPermission) {
+        setPermissionState('requesting');
+        setTimeout(() => {
+          hapticService.success();
+          setPermissionState('granted');
+          
+          const mockRaw = [
+            { name: 'Sarah Connor', phone: '+1 555-9011', email: 'sarah.c@terminator.com', birthday: '1965-11-10' },
+            { name: 'Bruce Wayne', phone: '+1 735-3921', email: 'bruce@waynecorp.com', birthday: '1972-02-19' },
+            { name: persons[0]?.name || 'John Doe', phone: '+1 555-1234', email: 'john@example.com', birthday: '' },
+            { name: 'Diana Prince', phone: '+1 800-AMAZON', email: 'diana@themyscira.org', birthday: '' },
+            { name: 'Tony Stark', phone: '+1 3000-IRON', email: 'tony@stark.io', birthday: '1970-05-29' },
+            { name: 'Clark Kent', phone: '+1 555-DAILY', email: 'clark@dailyplanet.com', birthday: '' }
+          ];
+          
+          const processed = processContacts(mockRaw);
+          setContacts(processed);
 
-        const autoSelect = new Set<string>();
-        processed.forEach(c => {
-          if (!c.isDuplicate) {
-            autoSelect.add(c.id);
-          }
-        });
-        setSelectedIds(autoSelect);
-      }, 1000);
+          const autoSelect = new Set<string>();
+          processed.forEach(c => {
+            if (!c.isDuplicate) {
+              autoSelect.add(c.id);
+            }
+          });
+          setSelectedIds(autoSelect);
+        }, 1000);
+      } else {
+        setPermissionState('denied');
+        hapticService.error();
+        toast.error('Permission denied.');
+      }
     }
   };
 
