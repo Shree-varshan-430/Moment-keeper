@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as zod from 'zod';
 import { useEventStore } from '@/store/eventStore';
 import { useAuthStore } from '@/store/authStore';
-import { X, Plus, Trash, UserPlus, Camera, Upload } from 'lucide-react';
+import { X, Plus, Trash, UserPlus, Camera, Upload, Dices } from 'lucide-react';
 import { MKEvent, EventCategory, PriorityLevel, NotificationTiming } from '@/types';
 import toast from 'react-hot-toast';
 import { hapticService } from '@/services/hapticService';
@@ -74,6 +74,21 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({ isOpen, onClose,
 
   const selectedDate = watch('date');
   const selectedPersonId = watch('personId');
+  const selectedCategory = watch('category');
+
+  const handleShuffleDescription = () => {
+    const list = CATEGORY_SUGGESTIONS[selectedCategory || 'custom'] || CATEGORY_SUGGESTIONS.custom;
+    const randomIndex = Math.floor(Math.random() * list.length);
+    setValue('description', list[randomIndex].description);
+    hapticService.lightImpact();
+  };
+
+  const handleShuffleNotes = () => {
+    const list = CATEGORY_SUGGESTIONS[selectedCategory || 'custom'] || CATEGORY_SUGGESTIONS.custom;
+    const randomIndex = Math.floor(Math.random() * list.length);
+    setValue('notes', list[randomIndex].notes);
+    hapticService.lightImpact();
+  };
 
   useEffect(() => {
     setPhotoPreviewUrl(null);
@@ -446,9 +461,20 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({ isOpen, onClose,
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-mk-silver mb-1.5">
-              Brief Description
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-mk-silver">
+                Brief Description
+              </label>
+              <button
+                type="button"
+                onClick={handleShuffleDescription}
+                className="text-mk-silver hover:text-mk-white transition-all flex items-center gap-1.5 text-[9px] uppercase font-bold tracking-wider hover:scale-105 border border-mk-glass-border rounded-lg px-2 py-0.5 bg-white/5 active:scale-95 cursor-pointer"
+                title="Roll Suggestion"
+              >
+                <Dices size={10} className="text-mk-silver group-hover:text-mk-white" />
+                <span>Suggest 🎲</span>
+              </button>
+            </div>
             <textarea
               {...register('description')}
               rows={2}
@@ -471,9 +497,20 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({ isOpen, onClose,
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-mk-silver mb-1.5">
-                Gift / Notes Reminder
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-mk-silver">
+                  Gift / Notes Reminder
+                </label>
+                <button
+                  type="button"
+                  onClick={handleShuffleNotes}
+                  className="text-mk-silver hover:text-mk-white transition-all flex items-center gap-1.5 text-[9px] uppercase font-bold tracking-wider hover:scale-105 border border-mk-glass-border rounded-lg px-2 py-0.5 bg-white/5 active:scale-95 cursor-pointer"
+                  title="Roll Suggestion"
+                >
+                  <Dices size={10} className="text-mk-silver group-hover:text-mk-white" />
+                  <span>Suggest 🎲</span>
+                </button>
+              </div>
               <input
                 type="text"
                 {...register('notes')}
@@ -525,4 +562,106 @@ export const EventFormModal: React.FC<EventFormModalProps> = ({ isOpen, onClose,
       />
     </div>
   );
+          };
+
+const CATEGORY_SUGGESTIONS: Record<
+  EventCategory,
+  Array<{ description: string; notes: string }>
+> = {
+  birthday: [
+    { description: "Planning a surprise birthday party at their favorite restaurant with close friends.", notes: "Order custom red velvet cake from local bakery 3 days in advance." },
+    { description: "Intimate birthday dinner at home with homemade cake and decorations.", notes: "Buy leather wallet or cardholder (favorite color: dark brown)." },
+    { description: "Weekend getaway trip to celebrate their special day in nature.", notes: "Gift idea: Premium noise-cancelling headphones." },
+    { description: "Organizing a theme party (retro/favorite movie) with custom playlist.", notes: "Prepare handmade birthday card with letters from friends." },
+    { description: "Sending a surprise gift delivery to their office in the morning.", notes: "Order fresh bouquet of lilies and card online." },
+    { description: "Quiet breakfast in bed followed by a relaxing spa day.", notes: "Buy voucher for a full body massage at local wellness spa." },
+    { description: "Birthday picnic in the park with board games and acoustic guitar.", notes: "Purchase gourmet chocolate box and a bottle of fine red wine." },
+    { description: "Milestone celebration event renting a local venue for family reunion.", notes: "Gift idea: Instax mini camera with extra film packs." },
+    { description: "Hosting a movie night with their favorite snacks and desserts.", notes: "Rent a high-quality projector for the backyard movie night setup." },
+    { description: "Surprising them with tickets to a concert or sporting event they love.", notes: "Buy concert tickets on ticket portal before they sell out." }
+  ],
+  anniversary: [
+    { description: "Romantic candlelit dinner at the restaurant where we had our first date.", notes: "Book reservation at the restaurant 2 weeks in advance." },
+    { description: "Recreating our first vacation destination for a weekend road trip.", notes: "Order custom engraved silver jewelry or ring." },
+    { description: "Exchanging custom anniversary gifts and reading letters to each other.", notes: "Gift idea: Smart digital photo frame pre-loaded with memories." },
+    { description: "Booking a couples cooking class to learn making gourmet pasta.", notes: "Buy a bottle of vintage champagne from local winery." },
+    { description: "Quiet evening watching our wedding/relationship videos with champagne.", notes: "Get custom illustration portrait framed of us." },
+    { description: "Outdoor photoshoot session at the botanical garden at sunset.", notes: "Hire professional local photographer for 1-hour session." },
+    { description: "Surprise sunset cruise with live violin music on the lake.", notes: "Book tickets for the evening sunset boat cruise." },
+    { description: "Exchanging handmade memory scrapbook of the past year.", notes: "Collect photos from past trips and print them for scrapbook." },
+    { description: "Stargazing night with cozy blankets and hot chocolate on the balcony.", notes: "Buy telescope or stargazing sky map book." },
+    { description: "Attending a theater play followed by a late-night dessert date.", notes: "Book front row tickets for the drama play." }
+  ],
+  wedding: [
+    { description: "Attending the wedding ceremony followed by a grand reception dinner.", notes: "Dress code: Black-tie formal. Get suit/dress dry-cleaned." },
+    { description: "Sending a wedding gift registry item with a heartfelt card.", notes: "Buy custom ceramic dining set from the couple's gift registry." },
+    { description: "Helping the bride/groom prepare for the big day morning setup.", notes: "Coordinate timing with bridesmaids/groomsmen group chat." },
+    { description: "Joining the pre-wedding cocktail party and rehearsal dinner.", notes: "Prepare RSVP card and mail it back before the deadline." },
+    { description: "Organizing a bridal shower or bachelor party celebration.", notes: "Book accommodation at the wedding resort 1 month early." },
+    { description: "Quiet wedding anniversary celebration recalling the vows.", notes: "Buy card and place cash gift in a premium silver envelope." },
+    { description: "Writing a speech/toast to present at the wedding reception.", notes: "Rehearse speech notes in front of mirror for confidence." },
+    { description: "Gifting a custom hand-painted portrait of the couple.", notes: "Order the hand-painted portrait from local artist." },
+    { description: "Hosting a post-wedding brunch for out-of-town guests.", notes: "Confirm guest count and catering menu with coordinator." },
+    { description: "Attending the destination wedding weekend beach party.", notes: "Prepare travel bags, sunglasses, and beachwear." }
+  ],
+  family: [
+    { description: "Hosting a large family barbecue in the backyard this Sunday.", notes: "Buy fresh burgers, sausages, and premium charcoal for BBQ." },
+    { description: "Weekend family reunion at a cozy mountain cabin.", notes: "Book the mountain cabin rental 2 months in advance." },
+    { description: "Organizing a family game night with classics like Monopoly and Taboo.", notes: "Buy new board game expansion set to surprise the kids." },
+    { description: "Celebrating Mother's/Father's Day with a special family lunch.", notes: "Order custom personalized family calendar as a gift." },
+    { description: "Annual family photo session at the local park in autumn colors.", notes: "Coordinate dress code colors for the photo session." },
+    { description: "Visiting grandparents for a weekend brunch and sharing old stories.", notes: "Buy a box of premium herbal tea and soft blanket for grandparents." },
+    { description: "Family movie marathon day with homemade popcorn and snacks.", notes: "Get Netflix subscription or buy classic family movie DVD." },
+    { description: "Planning a surprise retirement party for parents with relatives.", notes: "Prepare secret slide show presentation of old family photos." },
+    { description: "Baking traditional holiday cookies together in the kitchen.", notes: "Buy baking ingredients: flour, chocolate chips, vanilla." },
+    { description: "One-day family road trip to visit a scenic lake or nature park.", notes: "Clean the family car and prepare playlist of classic road songs." }
+  ],
+  personal: [
+    { description: "Setting aside a day for deep self-care, meditation, and reading.", notes: "Buy a new hardcover leather journal and premium gel pen." },
+    { description: "Tracking progress of personal fitness goals and running a 5k.", notes: "Charge fitness smartwatch and prepare running shoes." },
+    { description: "Beginning a new online skill course on programming/art.", notes: "Dedicate 1 hour every evening for course video lectures." },
+    { description: "Decluttering and organizing the bedroom and desk workspace.", notes: "Prepare storage boxes and labels for organization." },
+    { description: "Writing in my personal journal and setting goals for the next month.", notes: "Review personal goals spreadsheet on Google Sheets." },
+    { description: "Going on a solo museum visit and enjoying a quiet coffee.", notes: "Buy museum ticket online to skip the morning queue." },
+    { description: "Creating a budget plan and reviewing monthly saving progress.", notes: "Update expense tracking app with latest receipts." },
+    { description: "Spending the evening painting or practicing a musical instrument.", notes: "Buy watercolor paint set and high-quality art pad." },
+    { description: "Waking up early to watch the sunrise at the scenic viewpoint.", notes: "Set alarm for 5:00 AM and check weather report tonight." },
+    { description: "Trying out a brand new complex recipe for a gourmet dinner.", notes: "Buy fresh herbs, garlic, and high-quality olive oil." }
+  ],
+  holiday: [
+    { description: "Planning a 7-day tropical beach vacation to relax under palm trees.", notes: "Renew passport and confirm hotel booking confirmation." },
+    { description: "Exploring a historic European city's culture and museums.", notes: "Book city tour guide and museum tickets in advance." },
+    { description: "Cozy winter ski trip in the mountains with snowboarding.", notes: "Rent ski gear and buy high-quality winter thermal clothes." },
+    { description: "Long weekend camping trip in the national forest with hiking.", notes: "Prepare camping tent, sleeping bags, and insect spray." },
+    { description: "Celebrating the national holiday with fireworks and local parade.", notes: "Check local city event calendar for parade start times." },
+    { description: "Attending a vibrant summer music festival with friends.", notes: "Buy festival passes and secure festival earplugs." },
+    { description: "Relaxing staycation at a local luxury hotel with pool access.", notes: "Pack swimwear, sunscreen, and polarized sunglasses." },
+    { description: "Road trip along the scenic coastal highway with scenic stops.", notes: "Download offline navigation maps on Google Maps." },
+    { description: "Exploring local historic sites and castles in the countryside.", notes: "Charge camera batteries and prepare extra memory cards." },
+    { description: "Visiting a famous theme park for rollercoasters and shows.", notes: "Buy fast-pass theme park tickets to skip the lines." }
+  ],
+  business: [
+    { description: "Attending a major industry networking conference in the city.", notes: "Print 50 copies of updated professional business cards." },
+    { description: "Preparing presentation slides for the quarterly sales pitch.", notes: "Rehearse presentation timing to fit within 15 minutes." },
+    { description: "Hosting an elegant dinner with key business clients.", notes: "Book reservation at the quiet business lounge restaurant." },
+    { description: "Reviewing and signing the partnership contract details.", notes: "Read contract legal terms carefully with legal counsel." },
+    { description: "Organizing a team-building lunch or activity for employees.", notes: "Order catering service or book escape room group slots." },
+    { description: "Conducting annual performance reviews with team members.", notes: "Prepare performance review feedback template sheets." },
+    { description: "Launching the new product version with a webinar event.", notes: "Test webinar mic, camera, and screen share connection." },
+    { description: "Setting up a professional headshot photo session.", notes: "Iron formal suit jacket and clean dress shoes." },
+    { description: "Brainstorming session for the next marketing campaign.", notes: "Bring whiteboard markers and post-it notes." },
+    { description: "Attending a professional skill-building workshop.", notes: "Print workshop handouts and prepare notebook." }
+  ],
+  custom: [
+    { description: "Annual dental health checkup and teeth cleaning visit.", notes: "Bring medical insurance card and avoid coffee before visit." },
+    { description: "Renewing vehicle insurance and scheduling car maintenance.", notes: "Collect car registration documents and check engine oil." },
+    { description: "Hosting a casual housewarming party for neighbors.", notes: "Buy paper plates, disposable cups, and party snacks." },
+    { description: "Attending a local community volunteer cleanup event.", notes: "Pack gardening gloves, heavy boots, and trash bags." },
+    { description: "Seasonal garden planting of fresh flowers and herbs.", notes: "Buy organic soil, tomato seeds, and flower pots." },
+    { description: "Scheduling a home maintenance service (HVAC/plumbing).", notes: "Clean up the basement area before the technicians arrive." },
+    { description: "Visiting the local pet shelter to donate pet food.", notes: "Buy 10 bags of dog food and cat toys for donation." },
+    { description: "Hosting a book club discussion on the latest novel.", notes: "Prepare cheese platter, wine, and discussion questions." },
+    { description: "Organizing a neighborhood garage sale event.", notes: "Label pricing on old books, clothes, and electronics." },
+    { description: "Visiting a local gallery art exhibition opening night.", notes: "Dress code: Smart casual. Confirm gallery entry ticket." }
+  ]
 };
