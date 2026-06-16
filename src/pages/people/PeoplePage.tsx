@@ -263,7 +263,7 @@ export const PeoplePage: React.FC = () => {
   };
 
   // ─── Group Handlers ────────────────────────────────────────────────
-  const handleSaveGroup = async (e: React.FormEvent) => {
+  const handleSaveGroup = (e: React.FormEvent) => {
     e.preventDefault();
     if (!groupName.trim()) {
       toast.error('Group name is required');
@@ -271,12 +271,16 @@ export const PeoplePage: React.FC = () => {
     }
 
     try {
-      await createGroup(groupName, groupType, groupDesc);
+      createGroup(groupName, groupType, groupDesc).catch((err: any) => {
+        console.error('Failed to create group:', err);
+        toast.error(`Failed to create group: ${err.message || err}`);
+      });
       toast.success('Group created successfully!');
       setGroupModalOpen(false);
       setGroupName('');
       setGroupDesc('');
     } catch (err: any) {
+      console.error('Failed to create group:', err);
       toast.error(`Failed to create group: ${err.message || err}`);
     }
   };
