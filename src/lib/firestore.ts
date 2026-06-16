@@ -31,18 +31,46 @@ export const cleanPayload = (obj: any) => {
 // ── User Profile ──────────────────────────────────────────────
 export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
   const snap = await getDoc(doc(db, COLLECTIONS.users, uid));
-  return snap.exists() ? (snap.data() as UserProfile) : null;
+  if (!snap.exists()) return null;
+  const profile = snap.data() as UserProfile;
+  try {
+    const secretSnap = await getDoc(doc(db, COLLECTIONS.users, uid, 'private', 'secrets'));
+    if (secretSnap.exists()) {
+      profile.privatePasskey = secretSnap.data().privatePasskey;
+    } else {
+      profile.privatePasskey = '1234';
+    }
+  } catch (err) {
+    console.warn('Failed to load user secrets:', err);
+    profile.privatePasskey = '1234';
+  }
+  return profile;
 };
 
 export const createUserProfile = async (profile: UserProfile) => {
+  const { privatePasskey, ...rest } = profile;
   await setDoc(doc(db, COLLECTIONS.users, profile.uid), {
-    ...cleanPayload(profile),
+    ...cleanPayload(rest),
     createdAt: serverTimestamp(),
   });
+  if (privatePasskey) {
+    await setDoc(doc(db, COLLECTIONS.users, profile.uid, 'private', 'secrets'), {
+      privatePasskey
+    });
+  }
 };
 
 export const updateUserProfile = async (uid: string, data: Partial<UserProfile>) => {
-  await updateDoc(doc(db, COLLECTIONS.users, uid), { ...cleanPayload(data), updatedAt: serverTimestamp() });
+  const { privatePasskey, ...rest } = data;
+  const cleanedRest = cleanPayload(rest);
+  if (Object.keys(cleanedRest).length > 0 || 'updatedAt' in data) {
+    await updateDoc(doc(db, COLLECTIONS.users, uid), { ...cleanedRest, updatedAt: serverTimestamp() });
+  }
+  if (privatePasskey) {
+    await setDoc(doc(db, COLLECTIONS.users, uid, 'private', 'secrets'), {
+      privatePasskey
+    }, { merge: true });
+  }
 };
 
 // ── Events ────────────────────────────────────────────────────
@@ -366,9 +394,42 @@ export const subscribeToUserProfile = (
   uid: string,
   callback: (profile: UserProfile | null) => void
 ) => {
-  return onSnapshot(doc(db, COLLECTIONS.users, uid), (snap) => {
-    callback(snap.exists() ? (snap.data() as UserProfile) : null);
+  let profileData: UserProfile | null = null;
+  let passkeyVal: string | undefined = undefined;
+
+  const emit = () => {
+    if (profileData) {
+      callback({
+        ...profileData,
+        privatePasskey: passkeyVal || '1234'
+      });
+    } else {
+      callback(null);
+    }
+  };
+
+  const unsubProfile = onSnapshot(doc(db, COLLECTIONS.users, uid), (snap) => {
+    profileData = snap.exists() ? (snap.data() as UserProfile) : null;
+    emit();
   });
+
+  const unsubSecrets = onSnapshot(doc(db, COLLECTIONS.users, uid, 'private', 'secrets'), (snap) => {
+    if (snap.exists()) {
+      passkeyVal = snap.data().privatePasskey;
+    } else {
+      passkeyVal = '1234';
+    }
+    emit();
+  }, (err) => {
+    console.warn('Failed to subscribe to secrets:', err);
+    passkeyVal = '1234';
+    emit();
+  });
+
+  return () => {
+    unsubProfile();
+    unsubSecrets();
+  };
 };
 
 export const subscribeToPersons = (
