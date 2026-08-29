@@ -29,7 +29,12 @@ If you encounter a bug or have a feature idea:
    ```bash
    git checkout -b feature/amazing-new-feature
    ```
-4. **Make your changes** and test them:
+4. **Set up local environment**:
+   Copy `.env.example` to `.env`. Contributors are encouraged to connect their own free Firebase project keys in `.env` for isolated local testing.
+   ```bash
+   cp .env.example .env
+   ```
+5. **Make your changes** and test them:
    ```bash
    npm run dev
    npm run build
